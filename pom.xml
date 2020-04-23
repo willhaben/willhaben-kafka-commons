@@ -30,6 +30,7 @@
     </modules>
 
     <properties>
+        <maven.deploy.skip>true</maven.deploy.skip>
         <target.jdk>11</target.jdk>
         <kafka.version>2.5.0</kafka.version>
         <jupiter.version>5.6.2</jupiter.version>
