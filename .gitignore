@@ -148,3 +148,6 @@ buildNumber.properties
 
 # For now we ignore the whole .idea folder as we currently do not need any of it in the repo
 .idea/
+
+# Just in case make sure that the original GPG Key-File is not checked in
+deployment/signingkey.asc

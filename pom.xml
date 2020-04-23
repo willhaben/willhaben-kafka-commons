@@ -9,6 +9,22 @@
     <version>1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
+    <url>https://github.com/willhaben/willhaben-kafka-commons</url>
+    <inceptionYear>2020</inceptionYear>
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>http://opensource.org/licenses/MIT</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <scm>
+        <connection>scm:git:git@github.com:willhaben/willhaben-kafka-commons</connection>
+        <developerConnection>scm:git:git@github.com:willhaben/willhaben-kafka-commons.git</developerConnection>
+        <url>https://github.com/willhaben/willhaben-kafka-commons</url>
+    </scm>
+
     <modules>
         <module>serializers</module>
     </modules>
@@ -20,6 +36,8 @@
 
         <!-- Plugin versions -->
         <maven.compiler.version>3.8.1</maven.compiler.version>
+        <maven.sources.version>3.2.1</maven.sources.version>
+        <maven.surefire.version>3.0.0-M4</maven.surefire.version>
     </properties>
 
     <dependencyManagement>
@@ -31,7 +49,7 @@
             </dependency>
             <dependency>
                 <groupId>org.junit.jupiter</groupId>
-                <artifactId>junit-jupiter</artifactId>
+                <artifactId>junit-jupiter-api</artifactId>
                 <version>${jupiter.version}</version>
             </dependency>
         </dependencies>
@@ -55,6 +73,24 @@
                         <target>${target.jdk}</target>
                     </configuration>
                 </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>${maven.surefire.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>${maven.sources.version}</version>
+                    <executions>
+                        <execution>
+                            <id>attach-sources</id>
+                            <goals>
+                                <goal>jar</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
             </plugins>
         </pluginManagement>
     </build>
@@ -63,5 +99,14 @@
     </repositories>
 
     <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/
+            </url>
+        </repository>
     </distributionManagement>
 </project>
