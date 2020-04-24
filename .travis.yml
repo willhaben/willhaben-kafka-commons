@@ -1,16 +1,10 @@
 language: java
 
-script: mvn verify -B
-
-before_deploy:
-  - openssl aes-256-cbc -K $encrypted_171b1c559d7b_key -iv $encrypted_171b1c559d7b_iv -in deployment/signingkey.asc.enc -out deployment/signingkey.asc -d
+before_deploy: deployment/loadGpgKeys.sh
 
 deploy:
   provider: script
-  script: >-
-    gpg2 --keyring=$TRAVIS_BUILD_DIR/pubring.gpg --no-default-keyring --import deployment/signingkey.asc &&
-    gpg2 --allow-secret-key-import --keyring=$TRAVIS_BUILD_DIR/secring.gpg --no-default-keyring --batch --import deployment/signingkey.asc &&
-    mvn clean deploy --settings deployment/settings.xml -Dgpg.executable=gpg2 -Dgpg.keyname=CF057DEA79BC0012747C171636F636C094E451AB -Dgpg.passphrase=$GPG_PASSPHRASE -Dgpg.publicKeyring=$TRAVIS_BUILD_DIR/pubring.gpg -Dgpg.secretKeyring=$TRAVIS_BUILD_DIR/secring.gpg
+  script: mvn clean deploy --settings deployment/settings.xml -Dgpg.executable=gpg2 -Dgpg.keyname=CF057DEA79BC0012747C171636F636C094E451AB -Dgpg.passphrase=$GPG_PASSPHRASE -Dgpg.publicKeyring=$TRAVIS_BUILD_DIR/pubring.gpg -Dgpg.secretKeyring=$TRAVIS_BUILD_DIR/secring.gpg
   skip_cleanup: true
   on:
     tags: true
