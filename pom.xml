@@ -19,8 +19,13 @@
         </license>
     </licenses>
 
+    <organization>
+        <name>willhaben internet service GmbH &amp; Co KG</name>
+        <url>https://willhaben.at</url>
+    </organization>
+
     <scm>
-        <connection>scm:git:git@github.com:willhaben/willhaben-kafka-commons</connection>
+        <connection>scm:git:git@github.com:willhaben/willhaben-kafka-commons.git</connection>
         <developerConnection>scm:git:git@github.com:willhaben/willhaben-kafka-commons.git</developerConnection>
         <url>https://github.com/willhaben/willhaben-kafka-commons</url>
     </scm>
@@ -31,6 +36,7 @@
 
     <properties>
         <maven.deploy.skip>true</maven.deploy.skip>
+        <maven.gpg.skip>true</maven.gpg.skip>
         <target.jdk>11</target.jdk>
         <kafka.version>2.5.0</kafka.version>
         <jupiter.version>5.6.2</jupiter.version>
@@ -38,7 +44,9 @@
         <!-- Plugin versions -->
         <maven.compiler.version>3.8.1</maven.compiler.version>
         <maven.sources.version>3.2.1</maven.sources.version>
+        <maven.javadoc.version>3.2.0</maven.javadoc.version>
         <maven.surefire.version>3.0.0-M4</maven.surefire.version>
+        <maven.gpg.version>1.6</maven.gpg.version>
     </properties>
 
     <dependencyManagement>
@@ -92,12 +100,60 @@
                         </execution>
                     </executions>
                 </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>${maven.javadoc.version}</version>
+                    <inherited>true</inherited>
+                    <executions>
+                        <execution>
+                            <id>attach-javadocs</id>
+                            <goals>
+                                <goal>jar</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
             </plugins>
         </pluginManagement>
     </build>
 
-    <repositories>
-    </repositories>
+    <profiles>
+        <!-- GPG Signature on release -->
+        <profile>
+            <id>travisRelease</id>
+            <properties>
+                <gpg.interactive>false</gpg.interactive>
+                <gpg.defaultKeyring>false</gpg.defaultKeyring>
+                <gpg.useagent>false</gpg.useagent>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>${maven.gpg.version}</version>
+                        <executions>
+                            <execution>
+                                <configuration>
+                                    <gpgArguments>
+                                        <!-- Change to loopback mode to avoid pgp passphrase prompt -->
+                                        <gpgArgument>--pinentry-mode</gpgArgument>
+                                        <gpgArgument>loopback</gpgArgument>
+                                    </gpgArguments>
+                                </configuration>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
     <distributionManagement>
         <snapshotRepository>

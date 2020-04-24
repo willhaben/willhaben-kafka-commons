@@ -13,6 +13,7 @@
 
     <properties>
         <maven.deploy.skip>false</maven.deploy.skip>
+        <maven.gpg.skip>false</maven.gpg.skip>
     </properties>
 
     <dependencies>
@@ -26,4 +27,17 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
 </project>
