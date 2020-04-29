@@ -1,6 +1,12 @@
+### Basic build configuration ###
 language: java
 os: linux
 dist: xenial
+
+### Build steps ###
+install: skip
+
+script: mvn verify -B
 
 before_deploy: deployment/loadGpgKeys.sh
 
@@ -11,6 +17,7 @@ deploy:
   on:
     tags: true
 
+### Environment variables ###
 env:
   global:
 # Sonatype JIRA Username (SONATYPE_USERNAME)
