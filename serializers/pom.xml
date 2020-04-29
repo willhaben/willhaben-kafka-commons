@@ -11,6 +11,9 @@
 
     <artifactId>serializers</artifactId>
 
+    <name>Willhaben Kafka commons serializers</name>
+    <description>Some custom kafka serializers that are used at willhaben</description>
+
     <dependencies>
         <dependency>
             <groupId>org.apache.kafka</groupId>

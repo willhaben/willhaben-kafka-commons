@@ -9,6 +9,8 @@
     <version>1.0.0</version>
     <packaging>pom</packaging>
 
+    <name>Willhaben Kafka commons parent</name>
+    <description>A parent pom for all other modules in this Kafka commons artifacts</description>
     <url>https://github.com/willhaben/willhaben-kafka-commons</url>
     <inceptionYear>2020</inceptionYear>
     <licenses>
@@ -24,10 +26,19 @@
         <url>https://willhaben.at</url>
     </organization>
 
+    <developers>
+        <developer>
+            <name>Matthias Seidemann</name>
+            <email>matthias.seidemann@willhaben.at</email>
+            <organization>willhaben</organization>
+            <organizationUrl>https://www.willhaben.at</organizationUrl>
+        </developer>
+    </developers>
+
     <scm>
-        <connection>scm:git:git@github.com:willhaben/willhaben-kafka-commons.git</connection>
-        <developerConnection>scm:git:git@github.com:willhaben/willhaben-kafka-commons.git</developerConnection>
-        <url>https://github.com/willhaben/willhaben-kafka-commons</url>
+        <connection>scm:git:git://github.com/willhaben/illhaben-kafka-commons.git</connection>
+        <developerConnection>scm:git:ssh://github.com:willhaben/illhaben-kafka-commons.git</developerConnection>
+        <url>http://github.com/willhaben/illhaben-kafka-commons/tree/master</url>
     </scm>
 
     <modules>
