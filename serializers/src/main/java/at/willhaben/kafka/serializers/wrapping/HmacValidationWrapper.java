@@ -8,7 +8,8 @@ import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Calculates a HMAC hash for the message and prepends it to the actual output. When unwrapping, the hash is calculated
@@ -22,25 +23,49 @@ public class HmacValidationWrapper implements MessageWrapper {
     private static final String ALGORITHM = "HmacSHA256";
     private static final int SIGNATURE_SIZE_BYTES = 256 / 8;
 
-    private final Mac mac;
+    private final Mac primaryMac;
+    private final Collection<Mac> allValidMacs;
     private final boolean allowUnvalidatedMessages;
 
-    private HmacValidationWrapper(Mac mac, boolean allowUnvalidatedMessages) {
-        this.mac = mac;
+    private HmacValidationWrapper(Mac primaryMac, Collection<Mac> additionalMacs, boolean allowUnvalidatedMessages) {
+        this.primaryMac = primaryMac;
         this.allowUnvalidatedMessages = allowUnvalidatedMessages;
+
+        this.allValidMacs = new HashSet<>();
+        this.allValidMacs.add(primaryMac);
+        this.allValidMacs.addAll(additionalMacs);
     }
 
-    public static MessageWrapper createInstance(String key) throws NoSuchAlgorithmException, InvalidKeyException {
+    public static MessageWrapper createInstance(String key) {
         return createInstance(key, false);
     }
 
-    public static MessageWrapper createInstance(String key, boolean allowUnvalidatedMessages) throws NoSuchAlgorithmException, InvalidKeyException {
+    public static MessageWrapper createInstance(String key, boolean allowUnvalidatedMessages) {
+        return createInstance(key, Collections.emptyList(), allowUnvalidatedMessages);
+    }
+
+    public static MessageWrapper createInstance(String key, Collection<String> additionalKeys, boolean allowUnvalidatedMessages) {
+        Mac primaryMac = createMacInstance(key);
+
+        Set<Mac> additionalMacs = additionalKeys.stream()
+                .map(HmacValidationWrapper::createMacInstance)
+                .collect(Collectors.toSet());
+
+        return new HmacValidationWrapper(primaryMac, additionalMacs, allowUnvalidatedMessages);
+    }
+
+    private static Mac createMacInstance(String key) {
         SecretKeySpec spec = new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), ALGORITHM);
 
-        Mac mac = Mac.getInstance(ALGORITHM);
-        mac.init(spec);
+        Mac mac = null;
+        try {
+            mac = Mac.getInstance(ALGORITHM);
+            mac.init(spec);
+        } catch (NoSuchAlgorithmException | InvalidKeyException e) {
+            throw new IllegalArgumentException("", e);
+        }
 
-        return new HmacValidationWrapper(mac, allowUnvalidatedMessages);
+        return mac;
     }
 
     @Override
@@ -67,18 +92,21 @@ public class HmacValidationWrapper implements MessageWrapper {
         byte[] receivedSignature = Arrays.copyOfRange(rawData, HEADER_SIZE_BYTES, HEADER_SIZE_BYTES + SIGNATURE_SIZE_BYTES);
         byte[] data = Arrays.copyOfRange(rawData, HEADER_SIZE_BYTES + SIGNATURE_SIZE_BYTES, rawData.length);
 
-        byte[] calculatedSignature = mac.doFinal(data);
-
-        if (Arrays.compare(receivedSignature, calculatedSignature) == 0) {
+        if (allValidMacs.stream().anyMatch(mac -> this.validate(mac, data, receivedSignature))) {
             return data;
         }
 
         throw new MessageWrapperException("Signature validation failed");
     }
 
+    private boolean validate(Mac mac, byte[] data, byte[] receivedSignature) {
+        byte[] calculatedSignature = mac.doFinal(data);
+        return Arrays.compare(receivedSignature, calculatedSignature) == 0;
+    }
+
     @Override
     public byte[] wrapMessage(byte[] data) {
-        byte[] signature = mac.doFinal(data);
+        byte[] signature = primaryMac.doFinal(data);
         return combineArrays(IDENTIFYING_HEADER, signature, data);
     }
 
