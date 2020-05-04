@@ -62,7 +62,7 @@ public class HmacValidationWrapper implements MessageWrapper {
             mac = Mac.getInstance(ALGORITHM);
             mac.init(spec);
         } catch (NoSuchAlgorithmException | InvalidKeyException e) {
-            throw new IllegalArgumentException("", e);
+            throw new IllegalArgumentException("Error when instantiating the message wrapper", e);
         }
 
         return mac;

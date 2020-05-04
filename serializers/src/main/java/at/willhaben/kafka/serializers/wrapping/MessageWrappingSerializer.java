@@ -21,7 +21,7 @@ public class MessageWrappingSerializer<T> extends DelegatingSerializer<T> implem
             throw new IllegalArgumentException("A message wrapper must be set");
         }
 
-        super.configure(configs, true);
+        super.configure(configs, false);
     }
 
     @Override
