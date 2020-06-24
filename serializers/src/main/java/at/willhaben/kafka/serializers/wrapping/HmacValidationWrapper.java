@@ -27,6 +27,8 @@ public class HmacValidationWrapper implements MessageWrapper {
     private final Collection<Mac> allValidMacs;
     private final boolean allowUnvalidatedMessages;
 
+    private boolean validationEnabled = true;
+
     private HmacValidationWrapper(Mac primaryMac, Collection<Mac> additionalMacs, boolean allowUnvalidatedMessages) {
         this.primaryMac = primaryMac;
         this.allowUnvalidatedMessages = allowUnvalidatedMessages;
@@ -68,6 +70,14 @@ public class HmacValidationWrapper implements MessageWrapper {
         return mac;
     }
 
+    public boolean isValidationEnabled() {
+        return validationEnabled;
+    }
+
+    public void setValidationEnabled(boolean validationEnabled) {
+        this.validationEnabled = validationEnabled;
+    }
+
     @Override
     public byte[] unwrapMessage(byte[] rawData) throws MessageWrapperException {
         byte[] header = Arrays.copyOfRange(rawData, 0, HEADER_SIZE_BYTES);
@@ -75,7 +85,7 @@ public class HmacValidationWrapper implements MessageWrapper {
         if (isHeaderSet(header)) {
             return validateAndExtractData(rawData);
         } else {
-            if (allowUnvalidatedMessages) {
+            if (!validationEnabled || allowUnvalidatedMessages) {
                 logger.info("Unvalidated message has been processed");
                 return rawData;
             } else {
@@ -92,7 +102,7 @@ public class HmacValidationWrapper implements MessageWrapper {
         byte[] receivedSignature = Arrays.copyOfRange(rawData, HEADER_SIZE_BYTES, HEADER_SIZE_BYTES + SIGNATURE_SIZE_BYTES);
         byte[] data = Arrays.copyOfRange(rawData, HEADER_SIZE_BYTES + SIGNATURE_SIZE_BYTES, rawData.length);
 
-        if (allValidMacs.stream().anyMatch(mac -> this.validate(mac, data, receivedSignature))) {
+        if (!validationEnabled || allValidMacs.stream().anyMatch(mac -> this.validate(mac, data, receivedSignature))) {
             return data;
         }
 
@@ -107,15 +117,16 @@ public class HmacValidationWrapper implements MessageWrapper {
     @Override
     public byte[] wrapMessage(byte[] data) {
         byte[] signature = primaryMac.doFinal(data);
-        return combineArrays(IDENTIFYING_HEADER, signature, data);
+        return combineArrays(signature, data);
     }
 
-    private byte[] combineArrays(byte[] identifyingHeader, byte[] signature, byte[] data) {
-        byte[] combined = new byte[identifyingHeader.length + signature.length + data.length];
+    private byte[] combineArrays(byte[] signature, byte[] data) {
+        final int headerLength = IDENTIFYING_HEADER.length;
+        byte[] combined = new byte[headerLength + signature.length + data.length];
 
-        System.arraycopy(identifyingHeader, 0, combined, 0, identifyingHeader.length);
-        System.arraycopy(signature, 0, combined, identifyingHeader.length, signature.length);
-        System.arraycopy(data, 0, combined, identifyingHeader.length + signature.length, data.length);
+        System.arraycopy(IDENTIFYING_HEADER, 0, combined, 0, headerLength);
+        System.arraycopy(signature, 0, combined, headerLength, signature.length);
+        System.arraycopy(data, 0, combined, headerLength + signature.length, data.length);
         return combined;
     }
 }
