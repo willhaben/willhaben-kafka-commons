@@ -14,7 +14,13 @@ import java.util.stream.Collectors;
 /**
  * Calculates a HMAC hash for the message and prepends it to the actual output. When unwrapping, the hash is calculated
  * again for the actual message and validated towards the received hash. This implies that the wrapping and
- * unwrapping instances are initiated using the same key.
+ * unwrapping instances are initiated using the same key. For validation, multiple HMACs can be defined, to support
+ * UC like a separate HMAC for each sender, or to allow transitioning to a new HMAC in production systems without
+ * invalidating unprocessed messages.
+ *
+ * The Wrapper can be configured to allow unvalidated messages which can be useful for transitioning an already existing
+ * topic. However this should only be used for a limited time, because otherwise it would defeat the purpose of
+ * the whole wrapping mechanism.
  */
 public class HmacValidationWrapper implements MessageWrapper {
     private static final Logger logger = LoggerFactory.getLogger(HmacValidationWrapper.class);
@@ -79,7 +85,7 @@ public class HmacValidationWrapper implements MessageWrapper {
     }
 
     @Override
-    public byte[] unwrapMessage(byte[] rawData) throws MessageWrapperException {
+    public byte[] unwrapMessage(byte[] rawData) {
         byte[] header = Arrays.copyOfRange(rawData, 0, HEADER_SIZE_BYTES);
 
         if (isHeaderSet(header)) {

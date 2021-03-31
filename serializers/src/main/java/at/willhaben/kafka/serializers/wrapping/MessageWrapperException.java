@@ -1,6 +1,6 @@
 package at.willhaben.kafka.serializers.wrapping;
 
-public class MessageWrapperException extends Exception {
+public class MessageWrapperException extends RuntimeException {
     public MessageWrapperException(String message) {
         super(message);
     }
