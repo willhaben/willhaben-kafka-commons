@@ -18,6 +18,7 @@ public class ValidatingDeserializerTest {
 
     private static final String INVALID_MESSAGE_BASE64="AgfuH1IK46u2/TW8J8p+dK3YmWpw7fLm5QhGU3Tw+QJNeVRlc3REYXRh";
     private static final String VALID_MESSAGE_BASE64 = "qqqqqgIH7h9SCuOrtvw1vCfKfnSt2JlqcO3y5uUIRlN08PkCTXlUZXN0RGF0YQ==";
+    private static final String INVALID_SIGNATURE_BASE64 = "qqqqqgFH7h9SCuOrtvw1vCfKfnSt2JlqcO3y5uUIRlN08PkCTXlUZXN0RGF0YQ==";
     private static final String VALID_MESSAGE_KEY = "initKey";
     private static final String VALID_MESSAGE_CONTENT = "MyTestData";
 
@@ -29,7 +30,7 @@ public class ValidatingDeserializerTest {
     }
 
     @Test
-    public void deserialize_shouldWork() throws NoSuchAlgorithmException, InvalidKeyException {
+    public void deserialize_shouldWork() {
         deserializer.configure(getConfiguration(VALID_MESSAGE_KEY), false);
         Object deserialize = deserializer.deserialize("some.topic", getMessageAsBytes(VALID_MESSAGE_BASE64));
 
@@ -37,7 +38,7 @@ public class ValidatingDeserializerTest {
     }
 
     @Test
-    public void deserializeUnwrappedMessageWithAllowedModeOn_shouldWork() throws NoSuchAlgorithmException, InvalidKeyException {
+    public void deserializeUnwrappedMessageWithAllowedModeOn_shouldWork() {
         String someMessage = "Some random message";
         deserializer.configure(getBackwardsCompatibleConfiguration(VALID_MESSAGE_KEY), false);
         Object deserialize = deserializer.deserialize("some.topic", someMessage.getBytes());
@@ -46,7 +47,7 @@ public class ValidatingDeserializerTest {
     }
 
     @Test
-    public void deserializeUnwrappedMessageWithAllowedModeOff_shouldThrowException() throws NoSuchAlgorithmException, InvalidKeyException {
+    public void deserializeUnwrappedMessageWithAllowedModeOff_shouldThrowException() {
         String someMessage = "Some random message";
         deserializer.configure(getConfiguration(VALID_MESSAGE_KEY), false);
 
@@ -58,7 +59,7 @@ public class ValidatingDeserializerTest {
     }
 
     @Test
-    public void deserializeWithTemperedMessage_shouldThrowException() throws NoSuchAlgorithmException, InvalidKeyException {
+    public void deserializeWithTemperedMessage_shouldThrowException() {
         deserializer.configure(getConfiguration("wrongKey"), false);
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
@@ -69,7 +70,18 @@ public class ValidatingDeserializerTest {
     }
 
     @Test
-    public void deserializeWithWrongKey_shouldThrowException() throws NoSuchAlgorithmException, InvalidKeyException {
+    public void deserializeWithTemperedSignature_shouldThrowException() {
+        deserializer.configure(getConfiguration(VALID_MESSAGE_KEY), false);
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> deserializer.deserialize("some.topic", getMessageAsBytes(INVALID_SIGNATURE_BASE64))
+        );
+
+        assertTrue(exception.getCause() instanceof MessageWrapperException);
+    }
+
+    @Test
+    public void deserializeWithWrongKey_shouldThrowException() {
         deserializer.configure(getConfiguration("wrongKey"), false);
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
@@ -83,12 +95,12 @@ public class ValidatingDeserializerTest {
         return Base64.getDecoder().decode(message);
     }
 
-    private Map<String, ?> getConfiguration(String hmacKey) throws InvalidKeyException, NoSuchAlgorithmException {
+    private Map<String, ?> getConfiguration(String hmacKey) {
         return Map.of(MessageWrappingDeserializer.DESERIALIZER_CLASS, MockedDelegateDeserializer.class,
                 MessageWrappingDeserializer.MESSAGE_WRAPPER, HmacValidationWrapper.createInstance(hmacKey));
     }
 
-    private Map<String, ?> getBackwardsCompatibleConfiguration(String hmacKey) throws InvalidKeyException, NoSuchAlgorithmException {
+    private Map<String, ?> getBackwardsCompatibleConfiguration(String hmacKey) {
         return Map.of(MessageWrappingDeserializer.DESERIALIZER_CLASS, MockedDelegateDeserializer.class,
                 MessageWrappingDeserializer.MESSAGE_WRAPPER, HmacValidationWrapper.createInstance(hmacKey, true));
     }
