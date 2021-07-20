@@ -117,7 +117,21 @@ public class HmacValidationWrapper implements MessageWrapper {
 
     private boolean validate(Mac mac, byte[] data, byte[] receivedSignature) {
         byte[] calculatedSignature = mac.doFinal(data);
-        return Arrays.compare(receivedSignature, calculatedSignature) == 0;
+        final boolean isValid = Arrays.compare(receivedSignature, calculatedSignature) == 0;
+        if (!isValid) {
+            logger.debug("Hex signature: {} does not match with calculated hex value: {}",
+                    byteArrayToHex(receivedSignature),
+                    byteArrayToHex(calculatedSignature));
+        }
+        return isValid;
+    }
+
+    private static String byteArrayToHex(byte[] array) {
+        StringBuilder sb = new StringBuilder(array.length * 2);
+        for (byte b : array) {
+            sb.append(String.format("%02x", b));
+        }
+        return sb.toString();
     }
 
     @Override
